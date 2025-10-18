@@ -1,5 +1,12 @@
 # 🤖 Chatbot với Memory + Function Calling sử dụng Spring AI và Gemini
 
+![Live](https://img.shields.io/badge/LIVE-DEMO-green?style=for-the-badge&logo=live&logoColor=white)
+![Java](https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen?style=for-the-badge&logo=spring&logoColor=white)
+![Maven](https://img.shields.io/badge/Maven-3.6+-blue?style=for-the-badge&logo=apache-maven&logoColor=white)
+![AI](https://img.shields.io/badge/AI-Gemini-purple?style=for-the-badge&logo=google&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=opensourceinitiative&logoColor=white)
+
 Đây là một chatbot thông minh được xây dựng bằng **Spring Boot** và **Google Gemini AI**, có khả năng **ghi nhớ cuộc trò chuyện** và **thực thi các hành động cụ thể** thông qua Function Calling.
 
 ## 🎯 Mục tiêu Demo

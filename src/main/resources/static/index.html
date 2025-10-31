@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Assistant</title>
+    <title>AI Assistant - DEMO 1</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f172a;
-            --panel: #111827;
-            --card: #0b1220;
-            --border: #243244;
-            --text: #e5e7eb;
-            --muted: #94a3b8;
+            --bg: #ffffff;
+            --panel: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
             --primary: #22d3ee;
             --ok: #10b981;
             --err: #ef4444;
@@ -176,7 +176,7 @@
             gap: 8px;
             padding: 8px 12px;
             border: 1px solid var(--border);
-            background: #0b1220;
+            background: #ffffff;
             color: var(--text);
             border-radius: 999px;
             cursor: pointer;
@@ -187,7 +187,7 @@
 
         .suggest .chip:hover {
             transform: translateY(-1px);
-            background: #121a2a;
+            background: #f1f5f9;
         }
 
         .inputbar {
@@ -195,11 +195,11 @@
             margin: 0 auto;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 10px;
+            border-radius: 20px;
+            padding: 16px;
         }
 
         .btn-icon {
@@ -224,12 +224,15 @@
             border: 0;
             outline: none;
             color: var(--text);
-            max-height: 160px;
+            max-height: 200px;
+            font-size: 16px;
+            line-height: 1.5;
+            padding: 8px 0;
         }
 
         .send {
-            width: 36px;
-            height: 36px;
+            width: 44px;
+            height: 44px;
             border-radius: 999px;
             border: 0;
             background: #fff;
@@ -240,6 +243,8 @@
 
         .send svg {
             fill: #111;
+            width: 20px;
+            height: 20px;
         }
 
         .toast {
@@ -259,9 +264,9 @@
         }
 
         .err {
-            background: #1a0f12;
-            border-color: #7f1d1d;
-            color: #fecaca;
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
         }
 
         .hidden {
@@ -278,14 +283,14 @@
 <div class="wrap">
   <header>
     <div class="logo">AI</div>
-    <div><b>AI Assistant</b><div class="small">Trợ lý AI • Gemini</div></div>
+    <div><b>AI Assistant</b><div class="small">Trợ lý AI • OpenAI</div></div>
   </header>
 
   <main>
     <section id="chat"></section>
   </main>
 
-  <footer style="padding-bottom: 70px;">
+  <footer style="padding-bottom: 50px;">
     <div class="inputbar">
       <textarea id="q" rows="1" placeholder="Nhập tin nhắn..." style="margin-left: 10px;"></textarea>
       <button class="send" id="btnSend" title="Gửi">
@@ -305,12 +310,12 @@
         const toast = document.getElementById('toast');
 
         // Add initial welcome message
-        addMessage('Xin chào! Tôi là AI Assistant được hỗ trợ bởi Gemini. Tôi có khả năng ghi nhớ cuộc trò chuyện và có thể gọi các function để lấy thông tin thời gian thực. Hãy thử hỏi tôi "Bây giờ là mấy giờ?" hoặc bất kỳ câu hỏi nào khác!', 'ai');
+        addMessage('Xin chào! Tôi là AI Assistant được hỗ trợ bởi OpenAI. Tôi có khả năng ghi nhớ cuộc trò chuyện và có thể gọi các function để lấy thông tin thời gian thực. Hãy thử hỏi tôi "Bây giờ là mấy giờ?" hoặc bất kỳ câu hỏi nào khác!', 'ai');
 
         // Auto-resize textarea
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
         });
 
         // Send message when Enter is pressed (Shift+Enter for new line)

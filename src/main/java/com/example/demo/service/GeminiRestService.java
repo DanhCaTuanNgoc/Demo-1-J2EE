@@ -14,6 +14,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Legacy REST API implementation - kept as backup
+ * Now using Spring AI (GeminiAIService) as primary implementation
+ */
 @Service
 public class GeminiRestService {
 

@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Message;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,110 +14,93 @@ public class ChatService {
     @Autowired(required = false)
     private OpenAIService openAIService;
     
-    @Autowired(required = false)
-    private GeminiRestService geminiRestService;
+    @Autowired
+    private ChatMemory chatMemory;
 
-    private List<Message> conversationHistory = new ArrayList<>();
     private static final String DEFAULT_CONVERSATION_ID = "default-session";
 
     /**
-     * Chat với Spring AI - tự động xử lý Memory và Function Calling
+     * ✅ Chat thuần Spring AI - tự động Memory + Function Calling
      */
     public String chat(String userMessage) {
+        if (openAIService == null || !openAIService.isEnabled()) {
+            throw new RuntimeException("OpenAI service is not configured. Please set OPENROUTER_API_KEY in .env file");
+        }
+
         try {
-            // Add user message to local history (for backward compatibility)
-            conversationHistory.add(new Message(userMessage, Message.MessageType.USER));
-
-            String responseText;
+            System.out.println("\n" + "=".repeat(80));
+            System.out.println("💬 NEW MESSAGE");
+            System.out.println("=".repeat(80));
             
-            // Sử dụng OpenRouter với Spring AI (có Memory và Function Calling)
-            if (openAIService != null && openAIService.isEnabled()) {
-                // Spring AI tự động:
-                // 1. Lưu message vào memory
-                // 2. Quyết định có cần gọi function không
-                // 3. Gọi function nếu cần
-                // 4. Trả về response cuối cùng
-                responseText = openAIService.generateText(
-                    userMessage, 
-                    DEFAULT_CONVERSATION_ID,
-                    "getCurrentTime",  // Đăng ký function có thể gọi
-                    "calculator"       // Đăng ký function có thể gọi
-                );
-                
-                if (responseText == null || responseText.isBlank()) {
-                    throw new RuntimeException("Empty response from OpenRouter");
-                }
-                conversationHistory.add(new Message(responseText, Message.MessageType.ASSISTANT));
-                
-            } else if (geminiRestService != null && geminiRestService.isEnabled()) {
-                // Fallback: Gemini không hỗ trợ Spring AI, dùng cách cũ
-                String contextPrompt = buildContextPrompt(userMessage);
-                responseText = geminiRestService.generateText(contextPrompt);
-                
-                if (responseText == null || responseText.isBlank()) {
-                    throw new RuntimeException("Empty response from Gemini");
-                }
-                conversationHistory.add(new Message(responseText, Message.MessageType.ASSISTANT));
-                
-            } else {
-                throw new RuntimeException("No AI service available. Please configure OpenRouter or Gemini API key.");
-            }
+            // ✅ Spring AI tự động xử lý:
+            // 1. Lưu user message vào ChatMemory
+            // 2. Retrieve context từ memory (10 messages gần nhất)
+            // 3. Gửi request đến OpenRouter với functions registered
+            // 4. AI quyết định có cần gọi function không
+            // 5. Nếu cần → Spring AI tự động execute function → gọi API lần 2
+            // 6. Trả về response cuối cùng
+            // 7. Lưu assistant response vào ChatMemory
+            
+            String responseText = openAIService.generateText(
+                userMessage, 
+                DEFAULT_CONVERSATION_ID,
+                "getCurrentTime",  // ⚙️ Functions AI có thể sử dụng
+                "calculator"
+            );
 
+            System.out.println("=".repeat(80));
+            System.out.println();
+            
             return responseText;
 
         } catch (Exception e) {
-            System.err.println("❌ Error: " + e.getMessage());
+            System.err.println("❌ Error in chat: " + e.getMessage());
             e.printStackTrace();
-            
-            // Trả về thông báo lỗi thân thiện
-            return "Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn của bạn: " + e.getMessage();
+            return "Xin lỗi, tôi gặp lỗi khi xử lý tin nhắn: " + e.getMessage();
         }
     }
 
     /**
-     * Clear memory - sử dụng Spring AI memory nếu có
+     * ✅ Clear memory - sử dụng Spring AI ChatMemory
      */
     public void clearMemory() {
-        System.out.println("🗑️  Xóa toàn bộ lịch sử cuộc trò chuyện");
+        System.out.println("🗑️  Clearing conversation memory...");
         
-        // Clear Spring AI memory
-        if (openAIService != null && openAIService.isEnabled()) {
+        if (openAIService != null) {
             openAIService.clearMemory(DEFAULT_CONVERSATION_ID);
         }
         
-        // Clear local history
-        conversationHistory.clear();
-        System.out.println("✅ Đã xóa lịch sử cuộc trò chuyện");
-    }
-
-    public List<Message> getConversationHistory() {
-        System.out.println("📋 Lấy lịch sử cuộc trò chuyện: " + conversationHistory.size() + " tin nhắn");
-        return new ArrayList<>(conversationHistory);
+        System.out.println("✅ Memory cleared successfully");
     }
 
     /**
-     * Build context prompt with conversation history for OpenRouter (fallback only)
+     * ✅ Get history từ Spring AI ChatMemory
      */
-    private String buildContextPrompt(String currentMessage) {
-        StringBuilder context = new StringBuilder();
-        
-        context.append("Bạn là một chatbot thông minh có khả năng nhớ thông tin trong cuộc trò chuyện. ");
-        context.append("Hãy sử dụng thông tin từ lịch sử cuộc trò chuyện để trả lời chính xác và có ngữ cảnh.\n\n");
-        
-        // Add conversation history (last 10 messages to avoid token limit)
-        int startIndex = Math.max(0, conversationHistory.size() - 10);
-        for (int i = startIndex; i < conversationHistory.size() - 1; i++) {
-            Message msg = conversationHistory.get(i);
-            if (msg.getType() == Message.MessageType.USER) {
-                context.append("Người dùng: ").append(msg.getContent()).append("\n");
-            } else {
-                context.append("Chatbot: ").append(msg.getContent()).append("\n");
-            }
+    public List<Message> getConversationHistory() {
+        try {
+            var messages = chatMemory.get(DEFAULT_CONVERSATION_ID, 100);
+            
+            List<Message> history = new ArrayList<>();
+            messages.forEach(msg -> {
+                // Convert Spring AI Message to our Message model
+                String messageType = msg.getMessageType().getValue();
+                Message.MessageType type;
+                
+                switch (messageType.toLowerCase()) {
+                    case "user" -> type = Message.MessageType.USER;
+                    case "assistant" -> type = Message.MessageType.ASSISTANT;
+                    default -> type = Message.MessageType.ASSISTANT;
+                }
+                
+                history.add(new Message(msg.getContent(), type));
+            });
+            
+            System.out.println("📋 Retrieved " + history.size() + " messages from memory");
+            return history;
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error getting history: " + e.getMessage());
+            return new ArrayList<>();
         }
-        
-        context.append("Người dùng: ").append(currentMessage).append("\n");
-        context.append("Chatbot: ");
-        
-        return context.toString();
     }
 }

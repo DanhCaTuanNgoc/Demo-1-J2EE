@@ -1,28 +1,35 @@
 package com.example.demo.service;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Function;
 
 @Service
 public class TimeService {
 
-    public String getCurrentTime() {
-        System.out.println("⏰ TimeService: Lấy thời gian hiện tại");
-        
-        try {
+    /**
+     * ✅ Spring AI Function Bean - AI có thể tự động gọi function này
+     */
+    @Bean
+    @Description("Get current date and time in Vietnam timezone")
+    public Function<Request, Response> getCurrentTime() {
+        return request -> {
             LocalDateTime now = LocalDateTime.now();
-            String formattedTime = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss EEEE", java.util.Locale.forLanguageTag("vi"));
+            String currentTime = now.format(formatter);
             
-            System.out.println("✅ TimeService: Thời gian hiện tại = " + formattedTime);
-            return formattedTime;
+            System.out.println("⏰ Function called: getCurrentTime()");
+            System.out.println("   Result: " + currentTime);
             
-        } catch (Exception e) {
-            System.err.println("❌ TimeService: Lỗi khi lấy thời gian - " + e.getMessage());
-            e.printStackTrace();
-            return "Không thể lấy thời gian hiện tại";
-        }
+            return new Response(currentTime);
+        };
     }
 
+    public record Request() {}
+    
+    public record Response(String currentTime) {}
 }

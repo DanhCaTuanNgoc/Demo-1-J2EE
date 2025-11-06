@@ -16,7 +16,6 @@ public class OpenAIService {
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
     private final boolean enabled;
-    private final String systemPrompt;
 
     public OpenAIService(
             ChatModel chatModel,
@@ -25,19 +24,19 @@ public class OpenAIService {
             @Value("${spring.ai.openai.system-prompt:You are a helpful AI assistant.}") String systemPrompt) {
         
         this.chatMemory = chatMemory;
-        this.systemPrompt = systemPrompt;
         this.enabled = apiKey != null && !apiKey.isEmpty() && !apiKey.equals("your_openrouter_api_key_here");
         
         if (enabled) {
-            // Khởi tạo ChatClient với Memory Advisor và System Prompt
             this.chatClient = ChatClient.builder(chatModel)
-                .defaultSystem(systemPrompt)  // ✅ Thêm system prompt
+                .defaultSystem(systemPrompt)
                 .defaultAdvisors(
                     new MessageChatMemoryAdvisor(chatMemory)
                 )
                 .build();
-            System.out.println("✅ OpenAIService initialized with Spring AI Memory and Function Calling");
-            System.out.println("📋 System Prompt: " + systemPrompt);
+            System.out.println("✅ OpenAIService initialized (Spring AI)");
+            System.out.println("   � System Prompt: " + systemPrompt);
+            System.out.println("   🧠 Memory: Enabled");
+            System.out.println("   ⚙️  Function Calling: Enabled");
         } else {
             this.chatClient = null;
             System.out.println("⚠️  OpenAIService disabled - no API key configured");
@@ -49,10 +48,7 @@ public class OpenAIService {
     }
 
     /**
-     * Generate text với Memory và Function Calling
-     * @param userMessage Tin nhắn từ user
-     * @param conversationId ID của cuộc hội thoại (để phân biệt memory)
-     * @param functionNames Danh sách functions mà AI có thể gọi
+     * ✅ Generate text với Memory và Function Calling
      */
     public String generateText(String userMessage, String conversationId, String... functionNames) {
         if (!enabled) {
@@ -60,27 +56,31 @@ public class OpenAIService {
         }
 
         try {
-            System.out.println("\n🤖 Processing message with Spring AI...");
-            System.out.println("📝 User: " + userMessage);
-            System.out.println("🔗 Conversation ID: " + conversationId);
-            System.out.println("⚙️  Available functions: " + String.join(", ", functionNames));
+            System.out.println("📤 Sending to AI:");
+            System.out.println("   User: " + userMessage);
+            System.out.println("   Conversation ID: " + conversationId);
+            System.out.println("   Functions: " + String.join(", ", functionNames));
 
-            // ✅ SỬA: Dùng chatResponse() để lấy full response
             var response = chatClient.prompt()
                 .user(userMessage)
                 .advisors(a -> a
                     .param(CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId)
-                    .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100)
+                    .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10)  // ✅ Lấy 10 messages gần nhất
                 )
-                .functions(functionNames)  // Đăng ký functions
+                .functions(functionNames)
                 .call()
-                .chatResponse();  // ✅ Lấy ChatResponse đầy đủ
+                .chatResponse();
 
-            // Lấy response cuối cùng từ AI (sau khi xử lý function calls)
             String aiResponse = response.getResult().getOutput().getContent();
             
-            System.out.println("✅ AI Response: " + aiResponse);
-            System.out.println("📊 Metadata: " + response.getMetadata());
+            System.out.println("📥 Received from AI:");
+            System.out.println("   Assistant: " + aiResponse);
+            
+            // Log metadata (tokens, model, etc.)
+            var metadata = response.getMetadata();
+            if (metadata != null && metadata.getUsage() != null) {
+                System.out.println("   📊 Usage: " + metadata.getUsage());
+            }
             
             return aiResponse;
 
@@ -92,7 +92,7 @@ public class OpenAIService {
     }
 
     /**
-     * Clear memory cho một conversation
+     * ✅ Clear memory cho một conversation
      */
     public void clearMemory(String conversationId) {
         if (chatMemory != null) {

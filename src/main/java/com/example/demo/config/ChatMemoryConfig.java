@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class ChatMemoryConfig {
 
     /**
-     * Tạo InMemoryChatMemory bean
+     * Tạo InMemoryChatMemory bean để lưu trữ lịch sử trò chuyện trong bộ nhớ
      * Spring AI sẽ tự động quản lý conversation history
      */
     @Bean

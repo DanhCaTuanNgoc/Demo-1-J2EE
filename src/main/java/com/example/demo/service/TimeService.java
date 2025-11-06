@@ -12,7 +12,9 @@ import java.util.function.Function;
 public class TimeService {
 
     /**
-     * ✅ Spring AI Function Bean - AI có thể tự động gọi function này
+     * ✅ Spring AI Function Bean - AI có thể tự động gọi function này để tính toán
+     * Khi app chạy, Spring tạo instance và bỏ vào IoC Container.
+     * Khi bạn đăng ký Function Calling, Spring AI sẽ lấy chính các bean này để thực thi function.
      */
     @Bean
     @Description("Get current date and time in Vietnam timezone")

@@ -11,6 +11,8 @@ public class CalculatorService {
 
     /**
      * ✅ Spring AI Function Bean - AI có thể tự động gọi function này để tính toán
+     * Khi app chạy, Spring tạo instance và bỏ vào IoC Container.
+     * Khi bạn đăng ký Function Calling, Spring AI sẽ lấy chính các bean này để thực thi function.
      */
     @Bean
     @Description("Perform basic math operations: add, subtract, multiply, divide")

@@ -27,12 +27,18 @@ public class OpenAIService {
         this.enabled = apiKey != null && !apiKey.isEmpty() && !apiKey.equals("your_openrouter_api_key_here");
         
         if (enabled) {
+            // Tạo 1 ChatClient với ChatModel cấu hình trong application.properties
             this.chatClient = ChatClient.builder(chatModel)
-                .defaultSystem(systemPrompt)
+                .defaultSystem(systemPrompt) // Thiết lập system prompt
                 .defaultAdvisors(
                     new MessageChatMemoryAdvisor(chatMemory)
                 )
+                // Làm 3 việc 100% tự động:
+                // 1. Trước khi gửi request → lấy lịch sử conversation
+                // 2. Sau khi nhận response → lưu assistant message và user message vào memory
+                // 3. Tách từng conversation bằng conversationId
                 .build();
+
             System.out.println("✅ OpenAIService initialized (Spring AI)");
             System.out.println("   � System Prompt: " + systemPrompt);
             System.out.println("   🧠 Memory: Enabled");
@@ -61,15 +67,24 @@ public class OpenAIService {
             System.out.println("   Conversation ID: " + conversationId);
             System.out.println("   Functions: " + String.join(", ", functionNames));
 
+
+            // Gọi ChatClient với ChatMemory và Function Calling
             var response = chatClient.prompt()
                 .user(userMessage)
                 .advisors(a -> a
                     .param(CHAT_MEMORY_CONVERSATION_ID_KEY, conversationId)
                     .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10)  // ✅ Lấy 10 messages gần nhất
-                )
-                .functions(functionNames)
-                .call()
+                ) 
+                .functions(functionNames) // Danh sách Functions muốn đăng ký -> Spring AI sẽ tìm các hàm tương ứng (Method + Bean instance) trong IoC container.
+                .call()     // Call API
                 .chatResponse();
+
+                // Function Calling:
+                // Hai function Bean được gửi vào AI dưới dạng schema
+                // AI tự quyết định
+                // Nếu gọi function → Spring AI thực thi Java method
+                // Gửi lại kết quả lên model
+                // Model trả lời cuối cùng
 
             String aiResponse = response.getResult().getOutput().getContent();
             
